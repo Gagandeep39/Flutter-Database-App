@@ -31,13 +31,6 @@ class _MyHomeState extends State<MyHome> {
   String insertStatus = "waiting";
   String deleteStatus = "waiting";
   String updateStatus = "waiting";
-  String displayData;
-
-  @override
-  void initState() {
-    super.initState();
-    _displayUser();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +41,8 @@ class _MyHomeState extends State<MyHome> {
       body: new Container(
         child: ListView(
           children: <Widget>[
-            new Container( //Insert Container
+            new Container(
+              //Insert Container
               margin: EdgeInsets.all(8.0),
               padding: EdgeInsets.all(8.0),
               decoration: BoxDecoration(border: Border.all(width: 1)),
@@ -85,7 +79,8 @@ class _MyHomeState extends State<MyHome> {
                 ],
               ),
             ),
-            new Container( //Delete Container
+            new Container(
+              //Delete Container
               margin: EdgeInsets.all(8.0),
               padding: EdgeInsets.all(8.0),
               decoration: BoxDecoration(border: Border.all(width: 1)),
@@ -119,7 +114,8 @@ class _MyHomeState extends State<MyHome> {
                 ],
               ),
             ),
-            new Container( //Display Container
+            new Container(
+              //Display Container
               margin: EdgeInsets.all(8.0),
               padding: EdgeInsets.all(8.0),
               decoration: BoxDecoration(border: Border.all(width: 1)),
@@ -130,36 +126,22 @@ class _MyHomeState extends State<MyHome> {
                     style: TextStyle(
                       fontSize: 24, fontWeight: FontWeight.w400),
                   ),
-                  FutureBuilder(
-                    future: _displayUser(),
-                    builder:
-                      (BuildContext context, AsyncSnapshot snapshot) {
-                      if (snapshot.hasData) {
-                        return Text("${snapshot.data}");
-                      } else
-                        return Text("");
+                  RaisedButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (BuildContext context) {
+                          return DisplayScreen();
+                        }));
                     },
+                    textColor: Colors.white,
+                    child: Text("Display Data"),
+                    color: Colors.pink,
                   )
                 ],
               )),
           ],
         ),
       ));
-  }
-
-  Future<String> _displayUser() async {
-    var dbClient = DatabaseHelper();
-    String displayData = "\n";
-    displayData += "id    |   username     |  password\n";
-    displayData += "----------------------------------------------\n";
-    List _users = await dbClient.getAllUsers();
-    for (int i = 0; i < _users.length; i++) {
-      User u = User.map(_users[i]);
-      displayData += "${u.id}    |    ${u.username}      |    ${u.password}\n";
-      displayData += "----------------------------------------------\n";
-    }
-//    dbClient.close();
-    return displayData;
   }
 
   void _insertData() async {
@@ -197,6 +179,67 @@ class _MyHomeState extends State<MyHome> {
     });
 
 //    dbClient.close();
+  }
+}
+
+class DisplayScreen extends StatefulWidget {
+  @override
+  _DisplayScreenState createState() => _DisplayScreenState();
+}
+
+class _DisplayScreenState extends State<DisplayScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Display Data"),
+      ),
+      body: FutureBuilder(
+        future: _displayUser(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData) {
+            List _user = snapshot.data;
+            return ListViewWidget(
+              _user); //List view builder could have been made here but for readability it was created as a separated class
+          } else
+            return Text("");
+        },
+      ),
+    );
+  }
+
+  Future<List> _displayUser() async {
+    var dbClient = DatabaseHelper();
+    List _users = await dbClient.getAllUsers();
+    return _users;
+  }
+}
+
+class ListViewWidget extends StatelessWidget {
+  final List _user;
+
+  ListViewWidget(this._user);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: _user.length,
+      itemBuilder: (BuildContext context, int index) {
+        return new Card(
+          margin: EdgeInsets.all(2.0),
+          elevation: 2.0,
+          child: ListTile(
+            onTap: () {},
+            title: Text("User : ${User
+              .fromMap(_user[index])
+              .username}"),
+            subtitle: Text("ID  : ${User
+              .fromMap(_user[index])
+              .id}"),
+          ),
+        );
+      },
+    );
   }
 }
 
